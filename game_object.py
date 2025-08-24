@@ -136,3 +136,53 @@ class StaticObject(arcade.Sprite):
     ):
         super().__init__(image_path, 1)
 
+class Yellow(Bird):
+    def __init__(self, impulse_vector, x, y, space, speed_faster: float = 2):
+        super().__init__(
+            "assets/img/yellow.png",
+            impulse_vector,
+            x,
+            y,
+            space,
+            radius=12,
+        )
+        self.speed_faster = speed_faster
+        self.speed_used = False
+
+    def activate_speed(self):
+        if self.speed_used:
+            return
+        self.body.velocity = self.body.velocity * self.speed_faster
+        self.speed_used = True
+
+class Blue(Bird):
+    def __init__(self, impulse_vector, x, y, space):
+        super().__init__(
+            "assets/img/blue.png",
+            impulse_vector,
+            x,
+            y,
+            space,
+            radius=12
+        )
+
+    def split(self, space, bird_list):
+        clones = []
+        separation = math.radians(30)
+        current_angle = self.body.velocity.angle
+        angles = [current_angle + separation, current_angle, current_angle - separation]
+        current_speed = self.body.velocity.length
+
+        for a in angles:
+            impulse_vector = ImpulseVector(current_speed, a)
+            new_bird = Blue(
+                impulse_vector=impulse_vector,
+                x=self.body.position.x,
+                y=self.body.position.y,
+                space=space
+            )
+            bird_list.append(new_bird)
+            clones.append(new_bird)
+
+        return clones
+        

@@ -3,7 +3,7 @@ import logging
 import arcade
 import pymunk
 
-from game_object import Bird, Column, Pig
+from game_object import Bird, Yellow, Blue, Column, Pig
 from game_logic import get_impulse_vector, Point2D, get_distance
 
 logging.basicConfig(level=logging.DEBUG)
@@ -47,6 +47,33 @@ class App(arcade.View):
         # agregar un collision handler
         self.handler = self.space.add_default_collision_handler()
         self.handler.post_solve = self.collision_handler
+        self.current_bird_type = "red"
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == arcade.key.R:
+            self.current_bird_type = "red"
+        elif symbol == arcade.key.Y:
+            self.current_bird_type = "yellow"
+        elif symbol == arcade.key.B:
+            self.current_bird_type = "blue"
+        elif symbol == arcade.key.G:
+            for bird in self.birds:
+                if isinstance(bird, Yellow):
+                    if bird.body.velocity.length > 10:
+                        bird.activate_speed()
+                        logger.debug("TECLA G PRESIONADA")
+                        break
+        elif symbol == arcade.key.F:
+            for bird in self.birds:
+                if isinstance(bird, Blue):
+                    velocity = bird.body.velocity.length
+                    if velocity > 10:
+                        if bird.body.position.y > 50:
+                            new_birds = bird.split(self.space, self.birds)
+                            for b in new_birds:
+                                self.sprites.append(b)
+                            break
+        
 
     def collision_handler(self, arbiter, space, data):
         impulse_norm = arbiter.total_impulse.length
@@ -65,7 +92,11 @@ class App(arcade.View):
         for x in range(WIDTH // 2, WIDTH, 400):
             column = Column(x, 50, self.space)
             self.sprites.append(column)
-            self.world.append(column)
+            self.world.append(column)        
+        for x in range(WIDTH // 3, WIDTH, 400):
+            column1 = Column(x, 50, self.space)
+            self.sprites.append(column1)
+            self.world.append(column1)
 
     def add_pigs(self):
         pig1 = Pig(WIDTH / 2, 100, self.space)
@@ -97,9 +128,32 @@ class App(arcade.View):
             logger.debug(f"Releasing from: {self.end_point}")
             self.draw_line = False
             impulse_vector = get_impulse_vector(self.start_point, self.end_point)
-            bird = Bird("assets/img/red-bird3.png", impulse_vector, x, y, self.space)
+            bird_type = self.current_bird_type
+            if bird_type == "red":
+                bird = Bird(
+                    "assets/img/red-bird3.png",
+                    impulse_vector,
+                    x,
+                    y,
+                    self.space,
+                    radius=12
+                )
+            elif bird_type == "yellow":
+                bird = Yellow(
+                    impulse_vector,
+                    x,
+                    y,
+                    self.space
+                )
+            elif bird_type == "blue":
+                bird = Blue(
+                    impulse_vector,
+                    x,
+                    y,
+                    self.space
+                )
             self.sprites.append(bird)
-            self.birds.append(bird)
+            self.birds.append(bird)    
 
     def on_draw(self):
         self.clear()
